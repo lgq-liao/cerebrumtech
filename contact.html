@@ -25,9 +25,9 @@
     <h2>Contact Us</h2>
     <p>Email: info@cerebrumtech.eu.org</p>
     <p>Phone: +65-XXXX-XXXX</p>
-    <p>Address: Singapore</p>
+    <p>Address: 109 West Coast Vale #30-18 Singapore, 126752</p>
 
-    <form action="#" method="POST">
+    <form id="contact-form" action="#" method="POST" novalidate>
       <label for="name">Name:</label>
       <input type="text" id="name" name="name" required>
 
@@ -37,12 +37,78 @@
       <label for="message">Message:</label>
       <textarea id="message" name="message" rows="5" required></textarea>
 
-      <button type="submit">Send Message</button>
+      <!-- Honeypot field (spam protection) -->
+      <div style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;">
+        <label for="company">Company</label>
+        <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+      </div>
+
+      <button id="submit-btn" type="submit">Send Message</button>
+      <p id="form-status" aria-live="polite"></p>
     </form>
   </section>
 
   <footer>
     <p>© 2025 CerebrumTech. All Rights Reserved.</p>
   </footer>
+  <script>
+    (function() {
+      var form = document.getElementById('contact-form');
+      var submitBtn = document.getElementById('submit-btn');
+      var statusEl = document.getElementById('form-status');
+
+      function setStatus(message, isError) {
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? '#ff6b6b' : '#00E0FF';
+      }
+
+      function encodeMailtoBody(text) {
+        return encodeURIComponent(text).replace(/%0A/g, '%0D%0A');
+      }
+
+      form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Honeypot check
+        var company = document.getElementById('company');
+        if (company && company.value.trim() !== '') {
+          setStatus('Submission blocked (spam detected).', true);
+          return;
+        }
+
+        var name = document.getElementById('name').value.trim();
+        var email = document.getElementById('email').value.trim();
+        var message = document.getElementById('message').value.trim();
+
+        if (!name || !email || !message) {
+          setStatus('Please fill in all required fields.', true);
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+        setStatus('Preparing your email...', false);
+
+        var subject = 'New message from ' + name + ' via CerebrumTech site';
+        var body = 'Name: ' + name + '\n' +
+                   'Email: ' + email + '\n\n' +
+                   'Message:\n' + message + '\n';
+
+        var mailto = 'mailto:info@cerebrumtech.eu.org' +
+                     '?subject=' + encodeURIComponent(subject) +
+                     '&body=' + encodeMailtoBody(body);
+
+        // Trigger email client
+        window.location.href = mailto;
+
+        // Small delay before resetting button to avoid accidental re-clicks
+        setTimeout(function() {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Message';
+          setStatus('Your email client should now open. If not, please email info@cerebrumtech.eu.org.', false);
+        }, 1200);
+      });
+    })();
+  </script>
 </body>
 </html>
